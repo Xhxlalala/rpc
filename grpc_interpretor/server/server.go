@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"google.golang.org/grpc"
 	"net"
 	"rpc/grpc_test/proto"
@@ -18,7 +19,12 @@ func (s *Server) SayHello(ctx context.Context, in *proto.HelloRequest) (*proto.H
 }
 
 func main() {
-	g := grpc.NewServer()
+	interceptor := func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+		fmt.Println("接收到了一个新的请求")
+		return handler(ctx, req)
+	}
+	opt := grpc.UnaryInterceptor(interceptor)
+	g := grpc.NewServer(opt)
 	proto.RegisterGreeterServer(g, &Server{})
 	lis, err := net.Listen("tcp", "0.0.0.0:8080")
 	if err != nil {
